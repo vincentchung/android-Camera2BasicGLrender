@@ -27,6 +27,10 @@ import android.util.Log;
 import android.util.Size;
 import android.view.Surface;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
@@ -39,6 +43,9 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class MainRenderer implements GLSurfaceView.Renderer, SurfaceTexture.OnFrameAvailableListener {
+    private String mFragmentShaderPath="camera.frag.glsl";
+    private String mVertexShaderPath="camera.vert.glsl";
+
     private final String vss_default = "" +
             "attribute vec2 vPosition;\n" +
             "attribute vec2 vTexCoord;\n" +
@@ -104,12 +111,23 @@ public class MainRenderer implements GLSurfaceView.Renderer, SurfaceTexture.OnFr
 
     public void onSurfaceCreated ( GL10 unused, EGLConfig config ) {
         initTex();
+        String vss="";
+        String fss="";
         mSTexture = new SurfaceTexture ( hTex[0] );
         mSTexture.setOnFrameAvailableListener(this);
 
         GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-        hProgram = loadShader ( vss_default, fss_default );
+        try
+        {
+            vss=Util.getStringFromFileInAssets(mView.getContext(),mFragmentShaderPath,true);
+            fss=Util.getStringFromFileInAssets(mView.getContext(),mVertexShaderPath,true);
+
+        }catch (IOException e) {
+            Log.e("MainRenderer", "loadFromShadersFromAssets() failed. Check paths to assets.\n" + e.getMessage());
+        }
+
+        hProgram = loadShader ( vss, fss );
 
         Point ss = new Point();
         mView.getDisplay().getRealSize(ss);
